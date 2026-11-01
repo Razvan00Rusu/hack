@@ -69,13 +69,24 @@ test('original free-flow path and every changed route are immutable snapshots', 
   const snapshot=[...c.routeHistory[2].nodes];c.route.shift();
   assert.deepEqual(c.routeHistory[2].nodes,snapshot);
 });
-test('average completed journey time is missing before arrivals and uses actual trip duration', () => {
+test('average active vehicle age includes waiting cars and excludes completed trips', () => {
   const s = new Simulation();
-  assert.equal(s.history[0].averageJourneyTime, null);
-  s.cars = []; s.demand = 0;
-  s.completed = 2; s.tripSeconds = 50; s.time = 10; s.sample();
-  assert.equal(s.history.at(-1)!.averageJourneyTime,25);
-  s.completed = 3; s.tripSeconds = 120; s.time = 11; s.sample();
-  assert.equal(s.history.at(-1)!.averageJourneyTime,40);
-  assert.equal(s.history.find(p=>p.time===10)!.averageJourneyTime,25);
+  assert.equal(s.history[0].averageVehicleAge, 0);
+  const a = {...s.cars[0], born: 10, wait: 12};
+  const b = {...s.cars[1], born: 20};
+  s.cars = [a,b]; s.time = 30; s.completed = 100; s.tripSeconds = 10000;
+  s.finishedCars = [{...s.cars[0], born: -100, finished:true}];
+  s.sample(); assert.equal(s.history.at(-1)!.averageVehicleAge,15);
+  s.time = 32; s.sample(); assert.equal(s.history.at(-1)!.averageVehicleAge,17);
+  s.cars = [b]; s.sample(); assert.equal(s.history.at(-1)!.averageVehicleAge,12);
+  assert.equal(s.history.find(p=>p.time===30)!.averageVehicleAge,15);
+  s.cars = []; s.sample(); assert.equal(s.history.at(-1)!.averageVehicleAge,null);
+});
+test('reverse-direction closure leaves forward travel open and rejects reverse entrants', () => {
+  const r=roadById[incidentRoad], closures={[r.id]:'reverse' as const};
+  assert.equal(traversable(r,r.a,closures),true);assert.equal(traversable(r,r.b,closures),false);
+  assert.equal(route(r.a,r.b,closures).length,2);assert.ok(route(r.b,r.a,closures).length>2);
+  const s=new Simulation();s.setClosure(r.id,'reverse');
+  const occupants=new Set(s.cars.filter(c=>c.road===r.id&&c.from===r.b).map(c=>c.id));
+  for(let i=0;i<1200;i++){s.tick(.05);for(const c of s.cars) if(c.road===r.id&&c.from===r.b) assert.ok(occupants.has(c.id));}
 });

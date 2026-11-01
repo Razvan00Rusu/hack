@@ -1,8 +1,8 @@
 export type Node = { id: string; x: number; y: number; signal: boolean; row: number; col: number };
 export type Road = { id: string; a: string; b: string; name: string; major: boolean; length: number; capacity: number };
-export type Closure = 'open' | 'forward' | 'closed';
+export type Closure = 'open' | 'forward' | 'reverse' | 'closed';
 export type RouteVersion = { nodes: string[]; time: number; reason: string };
-export type Sample = { averageJourneyTime: number | null; time: number; vehicles: number; completed: number; reroutes: number; congested: number; completedChange: number; reroutesChange: number };
+export type Sample = { averageVehicleAge: number | null; time: number; vehicles: number; completed: number; reroutes: number; congested: number; completedChange: number; reroutesChange: number };
 export type NetworkEvent = { id: number; time: number; label: string };
 export type Car = { originalRoute: string[]; travelled: string[]; routeHistory: RouteVersion[]; finished?: boolean; id: number; from: string; to: string; road: string; progress: number; destination: string; route: string[]; origin: string; rerouted: boolean; reason: string; born: number; wait: number };
 export type Decision = { id: number; time: number; node: string; car: number; reason: string; road: string; kind: 'closure' | 'congestion' | 'system' };
@@ -21,7 +21,7 @@ for (const n of nodes) for (const [r, c] of [[n.row, n.col + 1], [n.row + 1, n.c
 export const roadById = Object.fromEntries(roads.map(r => [r.id, r]));
 export const boundary = nodes.filter(n => n.row === 0 || n.row === 5 || n.col === 0 || n.col === 6);
 export const incidentRoad = '4-3_4-4';
-export function traversable(road: Road, from: string, closures: Record<string, Closure>) { return closures[road.id] !== 'closed' && !(closures[road.id] === 'forward' && from === road.a); }
+export function traversable(road: Road, from: string, closures: Record<string, Closure>) { return closures[road.id] !== 'closed' && !(closures[road.id] === 'forward' && from === road.a) && !(closures[road.id] === 'reverse' && from === road.b); }
 export function pathCost(path: string[], loads: Record<string, number>, adaptive: boolean) {
   let cost = 0;
   for (let i = 0; i < path.length - 1; i++) {
@@ -54,10 +54,13 @@ export class Simulation {
   random() { this.seed = (1664525 * this.seed + 1013904223) >>> 0; return this.seed / 4294967296; }
   constructor() { for (let i = 0; i < 75; i++) { this.spawn(); const c = this.cars.at(-1); if (c) c.progress = this.random() * 0.85; } this.sample(); }
   loads() { const result: Record<string, number> = {}; for (const c of this.cars) result[c.road] = (result[c.road] || 0) + 1; return result; }
+  averageVehicleAge() {
+    return this.cars.length ? this.cars.reduce((sum, car) => sum + this.time - car.born, 0) / this.cars.length : null;
+  }
   sample() {
     const loads = this.loads();
     const beforeWindow = this.history.findLast(s => s.time <= this.time - 10 + 1e-8);
-    const value: Sample = { averageJourneyTime: this.completed ? this.tripSeconds / this.completed : null, time: this.time, vehicles: this.cars.length, completedChange: this.completed - (beforeWindow?.completed || 0), reroutesChange: this.reroutes - (beforeWindow?.reroutes || 0), completed: this.completed, reroutes: this.reroutes, congested: roads.filter(r => (loads[r.id] || 0) / r.capacity > 0.8).length };
+    const value: Sample = { averageVehicleAge: this.averageVehicleAge(), time: this.time, vehicles: this.cars.length, completedChange: this.completed - (beforeWindow?.completed || 0), reroutesChange: this.reroutes - (beforeWindow?.reroutes || 0), completed: this.completed, reroutes: this.reroutes, congested: roads.filter(r => (loads[r.id] || 0) / r.capacity > 0.8).length };
     if (this.history.at(-1)?.time === this.time) this.history[this.history.length - 1] = value;
     else this.history.push(value);
     this.history = this.history.slice(-901);
@@ -83,10 +86,13 @@ export class Simulation {
     this.cars.push({ originalRoute: route(start.id, end.id, {}, {}, false), travelled: [start.id], routeHistory: [{nodes: [...path], time: this.time, reason: 'Initial recommendation'}], id: ++this.spawned, from: path[0], to: path[1], origin: path[0], destination: end.id, road: road.id, progress: 0, route: path.slice(1), rerouted: false, reason: 'Following the fastest available route.', born: this.time, wait: 0 });
   }
   setClosure(id: string, state: Closure) {
+    if ((this.closures[id] || 'open') === state) return;
     this.closures[id] = state;
+    const road = roadById[id], horizontal = nodeById[road.a].row === nodeById[road.b].row;
+    const direction = state === 'forward' ? (horizontal ? 'Eastbound' : 'Southbound') : (horizontal ? 'Westbound' : 'Northbound');
     this.replan(true);
-    this.event(`${roadById[id].name}: ${state === 'open' ? 'reopened' : state === 'closed' ? 'closed' : 'A → B blocked'}`);
-    this.log('system', nodeById[roadById[id].a], 0, id, state === 'open' ? `${roadById[id].name} reopened. Routes can use this link again.` : `${roadById[id].name}: ${state === 'closed' ? 'both directions closed' : 'A → B blocked'}. Vehicles already on the link clear it; upstream traffic replans.`);
+    this.event(`${roadById[id].name}: ${state === 'open' ? 'reopened' : state === 'closed' ? 'closed' : state === 'forward' ? `${direction} (A → B) blocked` : `${direction} (B → A) blocked`}`);
+    this.log('system', nodeById[roadById[id].a], 0, id, state === 'open' ? `${roadById[id].name} reopened. Routes can use this link again.` : `${roadById[id].name}: ${state === 'closed' ? 'both directions closed' : state === 'forward' ? `${direction} (A → B) blocked` : `${direction} (B → A) blocked`}. Vehicles already on the link clear it; upstream traffic replans.`);
   }
   log(kind: Decision['kind'], node: Node, car: number, road: string, reason: string) { this.decisions.unshift({ id: ++this.decisionId, time: this.time, node: node.id, car, road, reason, kind }); this.decisions = this.decisions.slice(0, 40); }
   replan(force = false) {

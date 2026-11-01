@@ -26,10 +26,10 @@ export default function TrendMetric({ label, value, unit, icon, foot, series, ev
         {validSamples.length > 1 && <polygon points={`${x(validSamples[0].time)},78 ${points} ${x(validSamples.at(-1)!.time)},78`} fill={color} opacity=".07"/>}
         <polyline data-testid={`trend-${field}`} points={points} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round"/>
         {validSamples.at(-1) && <circle cx={x(validSamples.at(-1)!.time)} cy={y(Number(validSamples.at(-1)![field]))} r="2.5" fill={color}/>}
-        {!validSamples.length && <text x="140" y="48" textAnchor="middle">Awaiting completed journeys</text>}
+        {!validSamples.length && <text x="140" y="48" textAnchor="middle">No active vehicles</text>}
         <text x="26" y="98">{elapsed(start)}</text><text x="140" y="98" textAnchor="middle">{elapsed((start+end)/2)}</text><text x="254" y="98" textAnchor="end">{elapsed(end)}</text>
         {selected && selected[field] !== null && <g pointerEvents="none"><line x1={x(selected.time)} x2={x(selected.time)} y1="10" y2="78" stroke={color} opacity=".6"/><circle cx={x(selected.time)} cy={y(Number(selected[field]))} r="3.5" stroke="white" fill={color}/></g>}
       </svg>
-      {selected && <div className="trend-tooltip">{elapsed(selected.time)} · <b>{selected[field] === null ? "No completed journeys yet" : `${format(selected[field])} ${unit}`}</b>{marks.filter(e => Math.abs(e.time - selected.time) < 1).map(e => <span key={e.id}>{e.label}</span>)}</div>}
+      {selected && <div className="trend-tooltip">{elapsed(selected.time)} · <b>{selected[field] === null ? "No active vehicles" : `${format(selected[field])} ${unit}`}</b>{marks.filter(e => Math.abs(e.time - selected.time) < 1).map(e => <span key={e.id}>{e.label}</span>)}</div>}
     </div><small>{foot}</small></div>;
 }
