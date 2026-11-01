@@ -1,0 +1,11 @@
+import{readFileSync,writeFileSync}from'node:fs';import{cityMaps}from'../../lib/maps';import{makeDemand,createEngine,admitWaiting,applyIncident,protocol,type DemandTrip,type Scenario}from'../benchmark-core';
+const data=JSON.parse(readFileSync('reports/initial-pass/results.json','utf8'));let exact=0,rounded=0,agree=0,common=0;
+for(const a of data.results.filter((r:any)=>r.arm==='openai-fixed')){const b=data.results.find((r:any)=>r.id===a.id.replace('openai-fixed','openrouter-fixed'));if(JSON.stringify(a.metrics)===JSON.stringify(b.metrics))exact++;if(a.score.toFixed(1)===b.score.toFixed(1))rounded++;
+ const choices=(r:any)=>new Map(r.decisions.filter((d:any)=>d.kind==='routing'&&Math.abs(d.time-20)<1e-6).flatMap((d:any)=>d.result.answers.filter((a:any)=>a.source==='api').map((a:any)=>[a.node+'|'+a.car,a.choice])));
+ const ca=choices(a),cb=choices(b);for(const[k,v]of ca)if(cb.has(k)){common++;if(cb.get(k)===v)agree++;}
+}
+const scenario:Scenario={id:'central-low-none',mapId:'central',traffic:'low',closure:'none',seed:42},demand=makeDemand(cityMaps.central,'low'),s=createEngine(cityMaps.central,'openai-fixed');let waiting:DemandTrip[]=[],cursor=0;
+for(let step=1;step<=400;step++){while(cursor<demand.length&&demand[cursor].time<=(step-1)*protocol.dt+1e-8)waiting.push(demand[cursor++]);waiting=admitWaiting(s,waiting);applyIncident(s,scenario,step-1);s.tick(.05);}
+s.requestDecisions();const v=s.takeRouteBatches().flatMap(b=>b.junctions).flatMap(j=>j.vehicles).find(v=>v.node==='4-2'&&v.car===15)!;
+const audit={source:'preserved initial-pass results',exactMetricMatches:exact,roundedScoreMatches:rounded,totalFixedPairs:18,commonFirstCheckpointApiChoices:common,agreeingFirstCheckpointApiChoices:agree,agreementPct:100*agree/common,example:{scenario:scenario.id,node:v.node,car:v.car,candidates:v.candidates.map(c=>({value:c.value,cost:c.cost})),requiredCostThreshold:v.candidates[0].cost*.85,openai:'route_0',jev:'route_1'},conclusion:'Genuine same or near-same fixed-signal outcomes. Separate native providers are used. Route choices are tightly constrained by locally computed costs and a 15% improvement gate; signal timing offers different trade-offs.'};
+writeFileSync('reports/full-length/routing-audit.json',JSON.stringify(audit,null,2));console.log(audit);

@@ -1,0 +1,10 @@
+{
+  "stoppedAt": "2026-11-01T15:27:11.373622+00:00",
+  "reason": "User requested no further changes or API spending; publish available results immediately.",
+  "apiProcessesRunning": false,
+  "checkpointedArms": 223,
+  "reportedMatchedArms": 125,
+  "reportedCohorts": 25,
+  "scope": "Only 25 central-map cohorts have all five arms checkpointed. The report includes those 125 runs. No suburban OpenAI runs completed. The extra-high level has only one matched cohort. Unpaired saved runs are exported separately and excluded from model comparisons.",
+  "report": "report.html"
+}

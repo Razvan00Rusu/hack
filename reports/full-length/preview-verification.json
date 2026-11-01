@@ -1,0 +1,12 @@
+{
+  "verifiedAt": "2026-11-01T15:28:04.756Z",
+  "file": "reports/full-length/preview.html",
+  "ownAiDefault": true,
+  "percentageReference": true,
+  "playback": "passed",
+  "graphs": 4,
+  "stabilityRows": 3,
+  "mobile": "passed",
+  "externalRequests": 0,
+  "errors": []
+}

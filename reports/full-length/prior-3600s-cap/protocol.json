@@ -1,0 +1,547 @@
+{
+  "version": "full-length-v1",
+  "seeds": [
+    42,
+    137
+  ],
+  "dt": 0.05,
+  "demandUntil": 1140,
+  "warmup": 300,
+  "changes": [
+    300,
+    480,
+    660,
+    840
+  ],
+  "drainStarts": 1140,
+  "maxEnd": 3600,
+  "noCompletionTimeout": 300,
+  "decisionEvery": 30,
+  "signalPlanLifetime": 40,
+  "sampleEvery": 5,
+  "frameEvery": 10,
+  "trafficRates": {
+    "mid": 1.5,
+    "high": 3,
+    "extra": 6
+  },
+  "initialDemand": 36,
+  "workers": 8,
+  "maxRequests": 34564,
+  "maxRequestBytes": 1500000000,
+  "protocolHash": "99bb14a73109e31d1b0b06b77815ac238b400444878d9fbe21076fed608f37e4",
+  "arms": [
+    "shortest-fixed",
+    "openai-fixed",
+    "openrouter-fixed",
+    "openai-demand",
+    "openrouter-demand"
+  ],
+  "scenarios": [
+    {
+      "id": "central-mid-none-s42",
+      "mapId": "central",
+      "traffic": "mid",
+      "closure": "none",
+      "seed": 42
+    },
+    {
+      "id": "central-mid-none-s137",
+      "mapId": "central",
+      "traffic": "mid",
+      "closure": "none",
+      "seed": 137
+    },
+    {
+      "id": "central-mid-partial-s42",
+      "mapId": "central",
+      "traffic": "mid",
+      "closure": "partial",
+      "seed": 42
+    },
+    {
+      "id": "central-mid-partial-s137",
+      "mapId": "central",
+      "traffic": "mid",
+      "closure": "partial",
+      "seed": 137
+    },
+    {
+      "id": "central-mid-full-s42",
+      "mapId": "central",
+      "traffic": "mid",
+      "closure": "full",
+      "seed": 42
+    },
+    {
+      "id": "central-mid-full-s137",
+      "mapId": "central",
+      "traffic": "mid",
+      "closure": "full",
+      "seed": 137
+    },
+    {
+      "id": "central-mid-multi_full-s42",
+      "mapId": "central",
+      "traffic": "mid",
+      "closure": "multi_full",
+      "seed": 42
+    },
+    {
+      "id": "central-mid-multi_full-s137",
+      "mapId": "central",
+      "traffic": "mid",
+      "closure": "multi_full",
+      "seed": 137
+    },
+    {
+      "id": "central-mid-mixed-s42",
+      "mapId": "central",
+      "traffic": "mid",
+      "closure": "mixed",
+      "seed": 42
+    },
+    {
+      "id": "central-mid-mixed-s137",
+      "mapId": "central",
+      "traffic": "mid",
+      "closure": "mixed",
+      "seed": 137
+    },
+    {
+      "id": "central-mid-cascade-s42",
+      "mapId": "central",
+      "traffic": "mid",
+      "closure": "cascade",
+      "seed": 42
+    },
+    {
+      "id": "central-mid-cascade-s137",
+      "mapId": "central",
+      "traffic": "mid",
+      "closure": "cascade",
+      "seed": 137
+    },
+    {
+      "id": "central-high-none-s42",
+      "mapId": "central",
+      "traffic": "high",
+      "closure": "none",
+      "seed": 42
+    },
+    {
+      "id": "central-high-none-s137",
+      "mapId": "central",
+      "traffic": "high",
+      "closure": "none",
+      "seed": 137
+    },
+    {
+      "id": "central-high-partial-s42",
+      "mapId": "central",
+      "traffic": "high",
+      "closure": "partial",
+      "seed": 42
+    },
+    {
+      "id": "central-high-partial-s137",
+      "mapId": "central",
+      "traffic": "high",
+      "closure": "partial",
+      "seed": 137
+    },
+    {
+      "id": "central-high-full-s42",
+      "mapId": "central",
+      "traffic": "high",
+      "closure": "full",
+      "seed": 42
+    },
+    {
+      "id": "central-high-full-s137",
+      "mapId": "central",
+      "traffic": "high",
+      "closure": "full",
+      "seed": 137
+    },
+    {
+      "id": "central-high-multi_full-s42",
+      "mapId": "central",
+      "traffic": "high",
+      "closure": "multi_full",
+      "seed": 42
+    },
+    {
+      "id": "central-high-multi_full-s137",
+      "mapId": "central",
+      "traffic": "high",
+      "closure": "multi_full",
+      "seed": 137
+    },
+    {
+      "id": "central-high-mixed-s42",
+      "mapId": "central",
+      "traffic": "high",
+      "closure": "mixed",
+      "seed": 42
+    },
+    {
+      "id": "central-high-mixed-s137",
+      "mapId": "central",
+      "traffic": "high",
+      "closure": "mixed",
+      "seed": 137
+    },
+    {
+      "id": "central-high-cascade-s42",
+      "mapId": "central",
+      "traffic": "high",
+      "closure": "cascade",
+      "seed": 42
+    },
+    {
+      "id": "central-high-cascade-s137",
+      "mapId": "central",
+      "traffic": "high",
+      "closure": "cascade",
+      "seed": 137
+    },
+    {
+      "id": "central-extra-none-s42",
+      "mapId": "central",
+      "traffic": "extra",
+      "closure": "none",
+      "seed": 42
+    },
+    {
+      "id": "central-extra-none-s137",
+      "mapId": "central",
+      "traffic": "extra",
+      "closure": "none",
+      "seed": 137
+    },
+    {
+      "id": "central-extra-partial-s42",
+      "mapId": "central",
+      "traffic": "extra",
+      "closure": "partial",
+      "seed": 42
+    },
+    {
+      "id": "central-extra-partial-s137",
+      "mapId": "central",
+      "traffic": "extra",
+      "closure": "partial",
+      "seed": 137
+    },
+    {
+      "id": "central-extra-full-s42",
+      "mapId": "central",
+      "traffic": "extra",
+      "closure": "full",
+      "seed": 42
+    },
+    {
+      "id": "central-extra-full-s137",
+      "mapId": "central",
+      "traffic": "extra",
+      "closure": "full",
+      "seed": 137
+    },
+    {
+      "id": "central-extra-multi_full-s42",
+      "mapId": "central",
+      "traffic": "extra",
+      "closure": "multi_full",
+      "seed": 42
+    },
+    {
+      "id": "central-extra-multi_full-s137",
+      "mapId": "central",
+      "traffic": "extra",
+      "closure": "multi_full",
+      "seed": 137
+    },
+    {
+      "id": "central-extra-mixed-s42",
+      "mapId": "central",
+      "traffic": "extra",
+      "closure": "mixed",
+      "seed": 42
+    },
+    {
+      "id": "central-extra-mixed-s137",
+      "mapId": "central",
+      "traffic": "extra",
+      "closure": "mixed",
+      "seed": 137
+    },
+    {
+      "id": "central-extra-cascade-s42",
+      "mapId": "central",
+      "traffic": "extra",
+      "closure": "cascade",
+      "seed": 42
+    },
+    {
+      "id": "central-extra-cascade-s137",
+      "mapId": "central",
+      "traffic": "extra",
+      "closure": "cascade",
+      "seed": 137
+    },
+    {
+      "id": "suburban-mid-none-s42",
+      "mapId": "suburban",
+      "traffic": "mid",
+      "closure": "none",
+      "seed": 42
+    },
+    {
+      "id": "suburban-mid-none-s137",
+      "mapId": "suburban",
+      "traffic": "mid",
+      "closure": "none",
+      "seed": 137
+    },
+    {
+      "id": "suburban-mid-partial-s42",
+      "mapId": "suburban",
+      "traffic": "mid",
+      "closure": "partial",
+      "seed": 42
+    },
+    {
+      "id": "suburban-mid-partial-s137",
+      "mapId": "suburban",
+      "traffic": "mid",
+      "closure": "partial",
+      "seed": 137
+    },
+    {
+      "id": "suburban-mid-full-s42",
+      "mapId": "suburban",
+      "traffic": "mid",
+      "closure": "full",
+      "seed": 42
+    },
+    {
+      "id": "suburban-mid-full-s137",
+      "mapId": "suburban",
+      "traffic": "mid",
+      "closure": "full",
+      "seed": 137
+    },
+    {
+      "id": "suburban-mid-multi_full-s42",
+      "mapId": "suburban",
+      "traffic": "mid",
+      "closure": "multi_full",
+      "seed": 42
+    },
+    {
+      "id": "suburban-mid-multi_full-s137",
+      "mapId": "suburban",
+      "traffic": "mid",
+      "closure": "multi_full",
+      "seed": 137
+    },
+    {
+      "id": "suburban-mid-mixed-s42",
+      "mapId": "suburban",
+      "traffic": "mid",
+      "closure": "mixed",
+      "seed": 42
+    },
+    {
+      "id": "suburban-mid-mixed-s137",
+      "mapId": "suburban",
+      "traffic": "mid",
+      "closure": "mixed",
+      "seed": 137
+    },
+    {
+      "id": "suburban-mid-cascade-s42",
+      "mapId": "suburban",
+      "traffic": "mid",
+      "closure": "cascade",
+      "seed": 42
+    },
+    {
+      "id": "suburban-mid-cascade-s137",
+      "mapId": "suburban",
+      "traffic": "mid",
+      "closure": "cascade",
+      "seed": 137
+    },
+    {
+      "id": "suburban-high-none-s42",
+      "mapId": "suburban",
+      "traffic": "high",
+      "closure": "none",
+      "seed": 42
+    },
+    {
+      "id": "suburban-high-none-s137",
+      "mapId": "suburban",
+      "traffic": "high",
+      "closure": "none",
+      "seed": 137
+    },
+    {
+      "id": "suburban-high-partial-s42",
+      "mapId": "suburban",
+      "traffic": "high",
+      "closure": "partial",
+      "seed": 42
+    },
+    {
+      "id": "suburban-high-partial-s137",
+      "mapId": "suburban",
+      "traffic": "high",
+      "closure": "partial",
+      "seed": 137
+    },
+    {
+      "id": "suburban-high-full-s42",
+      "mapId": "suburban",
+      "traffic": "high",
+      "closure": "full",
+      "seed": 42
+    },
+    {
+      "id": "suburban-high-full-s137",
+      "mapId": "suburban",
+      "traffic": "high",
+      "closure": "full",
+      "seed": 137
+    },
+    {
+      "id": "suburban-high-multi_full-s42",
+      "mapId": "suburban",
+      "traffic": "high",
+      "closure": "multi_full",
+      "seed": 42
+    },
+    {
+      "id": "suburban-high-multi_full-s137",
+      "mapId": "suburban",
+      "traffic": "high",
+      "closure": "multi_full",
+      "seed": 137
+    },
+    {
+      "id": "suburban-high-mixed-s42",
+      "mapId": "suburban",
+      "traffic": "high",
+      "closure": "mixed",
+      "seed": 42
+    },
+    {
+      "id": "suburban-high-mixed-s137",
+      "mapId": "suburban",
+      "traffic": "high",
+      "closure": "mixed",
+      "seed": 137
+    },
+    {
+      "id": "suburban-high-cascade-s42",
+      "mapId": "suburban",
+      "traffic": "high",
+      "closure": "cascade",
+      "seed": 42
+    },
+    {
+      "id": "suburban-high-cascade-s137",
+      "mapId": "suburban",
+      "traffic": "high",
+      "closure": "cascade",
+      "seed": 137
+    },
+    {
+      "id": "suburban-extra-none-s42",
+      "mapId": "suburban",
+      "traffic": "extra",
+      "closure": "none",
+      "seed": 42
+    },
+    {
+      "id": "suburban-extra-none-s137",
+      "mapId": "suburban",
+      "traffic": "extra",
+      "closure": "none",
+      "seed": 137
+    },
+    {
+      "id": "suburban-extra-partial-s42",
+      "mapId": "suburban",
+      "traffic": "extra",
+      "closure": "partial",
+      "seed": 42
+    },
+    {
+      "id": "suburban-extra-partial-s137",
+      "mapId": "suburban",
+      "traffic": "extra",
+      "closure": "partial",
+      "seed": 137
+    },
+    {
+      "id": "suburban-extra-full-s42",
+      "mapId": "suburban",
+      "traffic": "extra",
+      "closure": "full",
+      "seed": 42
+    },
+    {
+      "id": "suburban-extra-full-s137",
+      "mapId": "suburban",
+      "traffic": "extra",
+      "closure": "full",
+      "seed": 137
+    },
+    {
+      "id": "suburban-extra-multi_full-s42",
+      "mapId": "suburban",
+      "traffic": "extra",
+      "closure": "multi_full",
+      "seed": 42
+    },
+    {
+      "id": "suburban-extra-multi_full-s137",
+      "mapId": "suburban",
+      "traffic": "extra",
+      "closure": "multi_full",
+      "seed": 137
+    },
+    {
+      "id": "suburban-extra-mixed-s42",
+      "mapId": "suburban",
+      "traffic": "extra",
+      "closure": "mixed",
+      "seed": 42
+    },
+    {
+      "id": "suburban-extra-mixed-s137",
+      "mapId": "suburban",
+      "traffic": "extra",
+      "closure": "mixed",
+      "seed": 137
+    },
+    {
+      "id": "suburban-extra-cascade-s42",
+      "mapId": "suburban",
+      "traffic": "extra",
+      "closure": "cascade",
+      "seed": 42
+    },
+    {
+      "id": "suburban-extra-cascade-s137",
+      "mapId": "suburban",
+      "traffic": "extra",
+      "closure": "cascade",
+      "seed": 137
+    }
+  ],
+  "method": "barrier-synchronised; run to completion with bounded gridlock fallback"
+}

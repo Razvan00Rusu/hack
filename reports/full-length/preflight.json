@@ -1,0 +1,42 @@
+[
+  {
+    "answers": [
+      {
+        "type": "choice",
+        "name": "probe",
+        "choice": "ew",
+        "probabilities": [
+          {
+            "value": "ew",
+            "probability": 1
+          },
+          {
+            "value": "ns",
+            "probability": 0
+          }
+        ],
+        "confidence": 1
+      }
+    ],
+    "provider": "openai",
+    "model": "gpt-6-luna",
+    "latencyMs": 1604.0924169999998
+  },
+  {
+    "answers": [
+      {
+        "type": "choice",
+        "choice": "ew",
+        "probabilities": {
+          "ew": 1,
+          "ns": 0
+        },
+        "confidence": 1,
+        "name": "probe"
+      }
+    ],
+    "provider": "openrouter",
+    "model": "typesafe/jev-1.13",
+    "latencyMs": 557.5642909999999
+  }
+]

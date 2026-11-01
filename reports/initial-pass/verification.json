@@ -1,0 +1,12 @@
+{
+  "verifiedAt": "2026-11-01T14:36:51.996Z",
+  "rows": 90,
+  "scenarioRows": 5,
+  "graphs": 4,
+  "playback": "passed",
+  "filters": "passed",
+  "exports": "passed",
+  "mobile": "passed",
+  "externalRequests": 0,
+  "errors": []
+}

@@ -1,0 +1,162 @@
+{
+  "seed": 42,
+  "horizon": 75,
+  "demandUntil": 45,
+  "dt": 0.05,
+  "checkpoints": [
+    20,
+    40
+  ],
+  "incidentStart": 15,
+  "incidentEnd": 50,
+  "frameSeconds": 2,
+  "plannedApiRequests": 216,
+  "maxApiRequests": 219,
+  "maxRequestBytes": 8000000,
+  "trafficRates": {
+    "low": 0.5,
+    "mid": 1.5,
+    "high": 3
+  },
+  "initialDemand": 12,
+  "arms": [
+    "shortest-fixed",
+    "openai-fixed",
+    "openrouter-fixed",
+    "openai-demand",
+    "openrouter-demand"
+  ],
+  "scenarios": [
+    {
+      "id": "central-low-none",
+      "mapId": "central",
+      "traffic": "low",
+      "closure": "none",
+      "seed": 42
+    },
+    {
+      "id": "central-low-partial",
+      "mapId": "central",
+      "traffic": "low",
+      "closure": "partial",
+      "seed": 42
+    },
+    {
+      "id": "central-low-full",
+      "mapId": "central",
+      "traffic": "low",
+      "closure": "full",
+      "seed": 42
+    },
+    {
+      "id": "central-mid-none",
+      "mapId": "central",
+      "traffic": "mid",
+      "closure": "none",
+      "seed": 42
+    },
+    {
+      "id": "central-mid-partial",
+      "mapId": "central",
+      "traffic": "mid",
+      "closure": "partial",
+      "seed": 42
+    },
+    {
+      "id": "central-mid-full",
+      "mapId": "central",
+      "traffic": "mid",
+      "closure": "full",
+      "seed": 42
+    },
+    {
+      "id": "central-high-none",
+      "mapId": "central",
+      "traffic": "high",
+      "closure": "none",
+      "seed": 42
+    },
+    {
+      "id": "central-high-partial",
+      "mapId": "central",
+      "traffic": "high",
+      "closure": "partial",
+      "seed": 42
+    },
+    {
+      "id": "central-high-full",
+      "mapId": "central",
+      "traffic": "high",
+      "closure": "full",
+      "seed": 42
+    },
+    {
+      "id": "suburban-low-none",
+      "mapId": "suburban",
+      "traffic": "low",
+      "closure": "none",
+      "seed": 42
+    },
+    {
+      "id": "suburban-low-partial",
+      "mapId": "suburban",
+      "traffic": "low",
+      "closure": "partial",
+      "seed": 42
+    },
+    {
+      "id": "suburban-low-full",
+      "mapId": "suburban",
+      "traffic": "low",
+      "closure": "full",
+      "seed": 42
+    },
+    {
+      "id": "suburban-mid-none",
+      "mapId": "suburban",
+      "traffic": "mid",
+      "closure": "none",
+      "seed": 42
+    },
+    {
+      "id": "suburban-mid-partial",
+      "mapId": "suburban",
+      "traffic": "mid",
+      "closure": "partial",
+      "seed": 42
+    },
+    {
+      "id": "suburban-mid-full",
+      "mapId": "suburban",
+      "traffic": "mid",
+      "closure": "full",
+      "seed": 42
+    },
+    {
+      "id": "suburban-high-none",
+      "mapId": "suburban",
+      "traffic": "high",
+      "closure": "none",
+      "seed": 42
+    },
+    {
+      "id": "suburban-high-partial",
+      "mapId": "suburban",
+      "traffic": "high",
+      "closure": "partial",
+      "seed": 42
+    },
+    {
+      "id": "suburban-high-full",
+      "mapId": "suburban",
+      "traffic": "high",
+      "closure": "full",
+      "seed": 42
+    }
+  ],
+  "method": "barrier-synchronised decision-quality screening",
+  "models": {
+    "openai": "gpt-6-luna",
+    "openrouter": "typesafe/jev-1.13"
+  }
+}

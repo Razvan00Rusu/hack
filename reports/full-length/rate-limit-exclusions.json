@@ -1,0 +1,12 @@
+{
+  "reason": "HTTP 429 affected these preliminary attempts; rerun using saved successful responses and quota-aware pacing.",
+  "runIds": [
+    "central-high-partial-s42--openai-demand",
+    "central-high-none-s42--openai-fixed",
+    "central-high-none-s137--openai-demand",
+    "central-high-none-s137--openai-fixed",
+    "central-high-partial-s42--openai-fixed",
+    "central-mid-cascade-s137--openai-demand",
+    "central-high-none-s42--openai-demand"
+  ]
+}

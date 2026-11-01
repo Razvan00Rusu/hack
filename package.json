@@ -9,7 +9,11 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
-    "test:ui": "playwright test"
+    "test:ui": "playwright test",
+    "benchmark:initial": "tsx scripts/benchmark.ts",
+    "benchmark:report": "tsx scripts/benchmark-report.ts",
+    "benchmark:full": "tsx scripts/full/benchmark.ts",
+    "benchmark:full:report": "tsx scripts/full/report.ts"
   },
   "keywords": [],
   "author": "",

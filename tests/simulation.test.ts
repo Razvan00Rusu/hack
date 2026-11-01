@@ -90,3 +90,97 @@ test('reverse-direction closure leaves forward travel open and rejects reverse e
   const occupants=new Set(s.cars.filter(c=>c.road===r.id&&c.from===r.b).map(c=>c.id));
   for(let i=0;i<1200;i++){s.tick(.05);for(const c of s.cars) if(c.road===r.id&&c.from===r.b) assert.ok(occupants.has(c.id));}
 });
+
+function junctionFixture(settings: ConstructorParameters<typeof Simulation>[0] = {}) {
+  const s = new Simulation(settings), template = s.cars[0];
+  s.cars = [['1-0', '1-1'], ['1-3', '1-4']].map(([from, to], i) => ({
+    ...template, id: i + 1, from, to, road: between(from, to).id, progress: 0,
+    destination: '5-6', route: route(to, '5-6', {}, {}, false),
+    travelled: [from], routeHistory: [],
+  }));
+  s.demand = 0;
+  return s;
+}
+
+test('lights own questions only for incoming traffic and batching preserves decisions', () => {
+  const batched = junctionFixture({cadence:'every-vehicle', batch:true});
+  const separate = junctionFixture({cadence:'every-vehicle', batch:false});
+  batched.requestDecisions(); separate.requestDecisions();
+  assert.equal(batched.requestCount, 2); assert.equal(batched.batchCount, 1);
+  assert.equal(separate.requestCount, 2); assert.equal(separate.batchCount, 2);
+  assert.deepEqual(batched.cars, separate.cars);
+  for (const r of batched.requests) {
+    assert.ok(['1-1','1-4'].includes(r.node));
+    assert.deepEqual(r.cars, batched.cars.filter(c=>c.to===r.node).map(c=>c.id));
+    assert.equal(r.settings.cadence,'every-vehicle');
+  }
+  assert.equal(batched.decisions.length,2); // Reviews include unchanged routes.
+  assert.ok(batched.decisions.every(d=>['1-1','1-4'].includes(d.node)));
+});
+
+test('per-vehicle cadence reviews once per approach and picks up new arrivals', () => {
+  const s = junctionFixture({cadence:'every-vehicle'});
+  s.requestDecisions(); s.requestDecisions();
+  assert.equal(s.vehicleDecisionCount, 2);
+  s.cars.push({...s.cars[0], id:3}); s.requestDecisions();
+  assert.equal(s.vehicleDecisionCount,3);
+  assert.deepEqual(s.requests[0].cars,[3]);
+  const c = s.cars[0]; c.from='2-1'; c.to='1-1'; c.road=between(c.from,c.to).id;
+  s.requestDecisions(); assert.equal(s.vehicleDecisionCount,4);
+});
+
+test('periodic cadence obeys simulated time, rechecks waiting cars, and skips empty lights', () => {
+  for (const intervalSeconds of [1,4,10] as const) {
+    const s = junctionFixture({cadence:'interval', intervalSeconds});
+    s.time=intervalSeconds-.05; s.requestDecisions(); assert.equal(s.requestCount,0);
+    s.time=intervalSeconds; s.requestDecisions(); assert.equal(s.requestCount,2);
+    s.time=intervalSeconds*2; s.requestDecisions(); assert.equal(s.vehicleDecisionCount,4);
+    s.cars=[]; s.time+=intervalSeconds; s.requestDecisions(); assert.equal(s.batchCount,2);
+  }
+});
+
+test('information scopes restrict actual occupancy inputs and retain snapshot settings', () => {
+  const local = junctionFixture({cadence:'every-vehicle',information:'local'});
+  const nearby = junctionFixture({cadence:'every-vehicle',information:'neighbours'});
+  const network = junctionFixture({cadence:'every-vehicle',information:'network'});
+  for (const s of [local, nearby, network]) s.requestDecisions();
+  const a = local.requests.find(r=>r.node==='1-1')!, b=nearby.requests.find(r=>r.node==='1-1')!, c=network.requests.find(r=>r.node==='1-1')!;
+  const own = between('1-0','1-1').id, adjacent=between('1-2','1-3').id, distant=between('5-5','5-6').id;
+  assert.equal(a.observedLoads[own],1);
+  assert.equal(a.observedLoads[adjacent],undefined); assert.ok(adjacent in b.observedLoads);
+  assert.equal(b.observedLoads[distant],undefined); assert.ok(distant in c.observedLoads);
+  assert.equal(Object.keys(c.observedLoads).length,roads.length);
+  local.setDecisionSettings({information:'network'});
+  assert.equal(a.settings.information,'local');
+  assert.deepEqual(a.cars,[1]);
+});
+
+test('shortest-path mode makes no requests and closure repair ignores cadence', () => {
+  const s = junctionFixture({cadence:'interval',intervalSeconds:10});
+  const c=s.cars[0], closed=between(c.route[0],c.route[1]);
+  s.setClosure(closed.id,'closed');
+  assert.equal(s.requestCount,0);
+  assert.ok(c.route.every((n,i)=>i===c.route.length-1||traversable(between(n,c.route[i+1]),n,s.closures)));
+  s.setAdaptive(false); s.time=20; s.requestDecisions(); assert.equal(s.batchCount,0);
+});
+
+test('hidden downstream congestion cannot affect local route decisions', () => {
+  const sims = (['local','network'] as const).map(information=>{
+    const s=junctionFixture({cadence:'every-vehicle',information});
+    const c=s.cars[0]; c.destination='1-6'; c.route=route(c.to,c.destination,{}, {},false);
+    const remote=between(c.route[3],c.route[4]);
+    s.cars=[c,...Array.from({length:50},(_,i)=>({...c,id:100+i,from:remote.a,to:remote.b,road:remote.id,destination:remote.b,route:[remote.b]}))];
+    s.requestDecisions(); return s;
+  });
+  assert.deepEqual(sims[0].cars[0].route,route('1-1','1-6',{}, {},false));
+  assert.notDeepEqual(sims[1].cars[0].route,sims[0].cars[0].route);
+});
+
+test('a vehicle holds at the junction when closures leave no valid fallback', () => {
+  const s=junctionFixture({cadence:'interval',intervalSeconds:10});
+  const c=s.cars[0]; s.cars=[c]; c.progress=.999;
+  for (const r of roads.filter(r=>r.a===c.to||r.b===c.to)) s.setClosure(r.id,'closed');
+  const originalRoad=c.road;
+  for(let i=0;i<300;i++) s.tick(.05);
+  assert.equal(c.road,originalRoad); assert.equal(s.completed,0);
+});

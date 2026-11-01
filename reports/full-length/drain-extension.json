@@ -1,0 +1,14 @@
+{
+  "changedAt": "2026-11-01T15:24:33.694Z",
+  "reason": "A progressive extra-high baseline cleared at 5588.9s in a no-API drain probe, beyond the original hard cap. Extend the cap uniformly while keeping the same no-completion gridlock safeguard.",
+  "previousMaxEnd": 3600,
+  "newMaxEnd": 7200,
+  "otherPolicyParametersUnchanged": true,
+  "completedRunsRetained": 222,
+  "rerunIds": [
+    "central-extra-mixed-s137--shortest-fixed",
+    "central-extra-none-s137--shortest-fixed",
+    "central-extra-partial-s137--shortest-fixed"
+  ],
+  "cache": "Exact same-provider successful responses retained, including interrupted in-flight runs."
+}

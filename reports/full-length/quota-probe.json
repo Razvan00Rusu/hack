@@ -1,0 +1,1 @@
+{"requests":1,"provider":"openai","status":200,"purpose":"Diagnose token quota after HTTP 429 responses","limitRequests":5000,"limitTokensPerMinute":2000000,"remainingTokensAtProbe":11508,"usageNotCaptured":true}

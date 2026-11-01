@@ -13,7 +13,7 @@ Build a visible chain: incident → queue → junction decision → personalised
 | 3:45–4:30 | Demo polish, scenario reset, measurements | One repeatable 90-second story |
 | 4:30–5:00 | Bug fixes, rehearsal, offline fallback | Demo works without network access |
 
-Current PoC covers the synthetic graph, simulation, closures, local routing policy, inspectors, and overhead follow mode. The Decisions API and comparison experiment remain hackathon work. First-person driving is a stretch after the core demo is reliable.
+Current PoC covers the synthetic graph, simulation, closures, local routing policy, inspectors, and overhead follow mode. Routing and optional demand-based signal timing now support OpenAI Decisions and pinned TypeSafe Jev 1.13 through OpenRouter, independently. An initial headless, matched-demand screening suite and portable replay report now exist under reports/initial-pass. Longer repeated-seed and real-time-latency experiments remain future work. First-person driving is a stretch after the core demo is reliable.
 
 ## Why shared coordination helps
 
@@ -23,15 +23,15 @@ Live traffic and personalised routes already exist in navigation products. Do no
 - Personalise decisions by destination, vehicle class and constraints. Two vehicles at the same junction can receive different routes.
 - Prevent queue spillback. Avoid sending a car into a full downstream link even when its destination is close.
 - Protect residential streets. Add throughput limits or penalties; sending everyone down a side road is not success.
-- Coordinate signal timing with route assignment. This PoC has fixed alternating signals; it does not yet optimise phases.
+- Coordinate signal timing with route assignment. The optional Decisions signal experiment selects bounded green durations from local queues, wait times and traffic flow. Fixed timing remains the default comparison mode.
 - Prioritise emergency vehicles or buses using an explicit policy. Keep ordinary drivers' maximum detours bounded.
 - Show auditable reasons derived from measured queue lengths and chosen options.
 
-The local PoC combines occupancy with a simple reservation weight of 0.25 for each planned future link. Route changes require a 15% estimated cost improvement, unless a closure invalidates the route. It has no residential budget, vehicle priority or fairness constraint yet. These are proposed additions, not demonstrated benefits.
+With whole-network information, the local PoC combines occupancy with a simple reservation weight of 0.25 for each planned future link. Junction-only and neighbouring-road settings restrict occupancy inputs and omit network reservations. Route changes require a 15% estimated cost improvement, unless a closure invalidates the route. It has no residential budget, vehicle priority or fairness constraint yet. These are proposed additions, not demonstrated benefits.
 
 ## Comparison experiment
 
-Keep an identical seed, entry demand schedule, closure at t=30s, and 180-second horizon. Run separate engines in lockstep. Compare free-flow shortest-path, independent congestion-aware routing, and shared coordination with planned-flow reservations. The UI currently offers the first and a coordinated heuristic with planned-flow reservation only. It is not a GPS benchmark.
+Keep an identical seed, entry demand schedule, closure at t=30s, and 180-second horizon. Run separate engines in lockstep. Compare free-flow shortest-path, independent congestion-aware routing, and shared coordination with planned-flow reservations. The UI offers shortest-path routing and coordinated routing through a local heuristic or either API provider, with configurable traffic visibility. Signal timing and its provider can vary independently. It is not a GPS benchmark.
 
 Report completed trips, mean and p95 journey time, accumulated stopped seconds, maximum queue, local-road vehicle seconds, and reroutes per vehicle. Include unfinished journeys so gridlocked modes cannot appear faster by completing only easy trips. Freeze the experiment's demand and metric definitions. Report the result even if coordination loses.
 
@@ -46,10 +46,10 @@ Report completed trips, mean and p95 journey time, accumulated stopped seconds, 
 
 ## Architecture
 
-Render at display cadence. Step physics at a fixed 50ms. Compute routes locally on the directed graph. Every few simulated seconds, a signal junction submits a small set of legal route options with expected travel time, occupancy and neighbourhood constraints. Decisions chooses an option. Validate its result against the latest closure and capacity state before applying it. Never ask the model to invent a street or perform each animation step.
+Render at display cadence. Step physics at a fixed 50ms. Compute routes locally on the directed graph. Each signal junction owns route reviews for vehicles on its incoming links. The routing controller supports once-per-approach requests or periodic reviews every 1, 4 or 10 simulated seconds, and junction-only, neighbouring-road or network traffic visibility. Independent junction questions due on the same step can share a request, with one typed route choice per vehicle. The local heuristic computes a route; either provider can select among locally validated candidate routes with observed occupancy and estimated costs. Residential and priority constraints remain future work. Validate its result against the latest closure and capacity state before applying it. Never ask the model to invent a street or perform each animation step.
 
-A real integration should use one server-side API route and batched independent junction questions. Include input version, timeout, confidence handling, refusal handling, stale-result checks and a local fallback. Closures must remain hard graph constraints regardless of model output.
+Separate server routes handle signal timing and route selection through a shared provider adapter. They include input versioning, timeout, confidence handling, refusal handling, stale-result checks and local fallbacks. Closures must remain hard graph constraints regardless of model output.
 
 ## Simulation assumptions
 
-The map is an illustrative warped grid named after Marylebone roads. It is not OpenStreetMap geometry. All links initially allow two-way traffic. One side blocked means one complete direction blocked, not a lane-capacity reduction. Cars follow with simple spacing and queue at alternating signals; conflict-free turn movements, pedestrians and detailed junction physics are out of scope. Demand follows incident road capacities at boundary nodes. Vehicles already on a newly closed link finish that link. New entries cannot use it. Follow mode is overhead, not a 3D first-person camera.
+The map is an illustrative warped grid named after Marylebone roads. It is not OpenStreetMap geometry. All links initially allow two-way traffic. One side blocked means one complete direction blocked, not a lane-capacity reduction. Cars follow with simple spacing and queue at alternating signals with 1-second all-red clearance; conflict-free turn movements, pedestrians and detailed junction physics are out of scope. Demand follows incident road capacities at boundary nodes. Vehicles already on a newly closed link finish that link. New entries cannot use it. Follow mode is overhead, not a 3D first-person camera.

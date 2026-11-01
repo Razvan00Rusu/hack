@@ -1,9 +1,11 @@
+import { defaultMap, type CityMap } from '../lib/maps';
 import { nodeById, type Closure, type Road } from '../lib/simulation';
 import { blocked, directions, trafficColor } from '../lib/road-display';
-export default function RoadSegment({road, state, selected, heat, forwardLoad, reverseLoad, onSelect}: {road: Road; state: Closure; selected: boolean; heat: boolean; forwardLoad: number; reverseLoad: number; onSelect: () => void}) {
+export default function RoadSegment({network=defaultMap,road, state, selected, heat, forwardLoad, reverseLoad, onSelect}: {network?:CityMap;road: Road; state: Closure; selected: boolean; heat: boolean; forwardLoad: number; reverseLoad: number; onSelect: () => void}) {
+  const nodeById=network.nodeById;
   const a=nodeById[road.a], b=nodeById[road.b], angle=Number((Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI).toFixed(4));
   const length=Number(road.length.toFixed(4));
-  const half=road.major ? 9.5 : 6, edge=half+4, d=directions(road);
+  const half=road.major ? 9.5 : 6, edge=half+4, d=directions(road,network);
   return <g data-road-id={road.id} className="road-link" transform={`translate(${a.x} ${a.y}) rotate(${angle})`} onClick={onSelect} role="button" tabIndex={0} aria-label={`${road.name} segment ${road.a} to ${road.b}`} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onSelect();}}}>
     <line x2={length} stroke="#d4d5ca" strokeWidth={half*2+3}/><line x2={length} stroke="#fafaf5" strokeWidth={half*2}/>
     {selected && <rect x="10" y={-half-1} width={length-20} height={half*2+2} rx="3" fill="none" stroke="#8c9d6d" strokeWidth="1.5"/>}

@@ -1,0 +1,42 @@
+[
+  {
+    "answers": [
+      {
+        "type": "choice",
+        "name": "preflight",
+        "choice": "east_west",
+        "probabilities": [
+          {
+            "value": "east_west",
+            "probability": 1
+          },
+          {
+            "value": "balanced",
+            "probability": 0
+          }
+        ],
+        "confidence": 1
+      }
+    ],
+    "provider": "openai",
+    "model": "gpt-6-luna",
+    "latencyMs": 2385.443625
+  },
+  {
+    "answers": [
+      {
+        "type": "choice",
+        "choice": "east_west",
+        "probabilities": {
+          "east_west": 1,
+          "balanced": 0
+        },
+        "confidence": 1,
+        "name": "preflight"
+      }
+    ],
+    "provider": "openrouter",
+    "model": "typesafe/jev-1.13",
+    "latencyMs": 858.96875
+  }
+]

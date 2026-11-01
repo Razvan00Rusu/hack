@@ -1,0 +1,28 @@
+{
+  "source": "preserved initial-pass results",
+  "exactMetricMatches": 14,
+  "roundedScoreMatches": 15,
+  "totalFixedPairs": 18,
+  "commonFirstCheckpointApiChoices": 418,
+  "agreeingFirstCheckpointApiChoices": 410,
+  "agreementPct": 98.08612440191388,
+  "example": {
+    "scenario": "central-low-none",
+    "node": "4-2",
+    "car": 15,
+    "candidates": [
+      {
+        "value": "route_0",
+        "cost": 41.35868699130174
+      },
+      {
+        "value": "route_1",
+        "cost": 35.29653579487465
+      }
+    ],
+    "requiredCostThreshold": 35.154883942606475,
+    "openai": "route_0",
+    "jev": "route_1"
+  },
+  "conclusion": "Genuine same or near-same fixed-signal outcomes. Separate native providers are used. Route choices are tightly constrained by locally computed costs and a 15% improvement gate; signal timing offers different trade-offs."
+}

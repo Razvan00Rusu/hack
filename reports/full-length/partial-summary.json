@@ -1,0 +1,47 @@
+{
+  "scope": "Only 25 central-map cohorts have all five arms checkpointed. The report includes those 125 runs. No suburban OpenAI runs completed. The extra-high level has only one matched cohort. Unpaired saved runs are exported separately and excluded from model comparisons.",
+  "runs": 125,
+  "allSavedArms": 223,
+  "results": {
+    "fixed": {
+      "commonCompletedCohorts": 19,
+      "matchedCohorts": 25,
+      "tripsPerMethod": 45144,
+      "meanJourneySeconds": [
+        524.0233619083364,
+        120.11828592929997,
+        130.3451344584429
+      ],
+      "journeyChangePct": [
+        0.0,
+        -77.07768495437587,
+        -75.12608331358264
+      ],
+      "fullyClearedRuns": [
+        19,
+        25,
+        25
+      ]
+    },
+    "demand": {
+      "commonCompletedCohorts": 19,
+      "matchedCohorts": 25,
+      "tripsPerMethod": 45144,
+      "meanJourneySeconds": [
+        524.0233619083364,
+        100.55824251269354,
+        88.86920520984884
+      ],
+      "journeyChangePct": [
+        0.0,
+        -80.81035125104145,
+        -83.04098411066755
+      ],
+      "fullyClearedRuns": [
+        19,
+        25,
+        25
+      ]
+    }
+  }
+}
