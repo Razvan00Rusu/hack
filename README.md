@@ -1,4 +1,4 @@
-# Greenwave
+# TrafficBench
 
 A traffic coordination experiment in a synthetic Marylebone road network. Built with Next.js, React, TypeScript and SVG. No map token, API key, or external map service required. Google Fonts is optional; system fonts work offline.
 
