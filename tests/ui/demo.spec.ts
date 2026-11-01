@@ -1,9 +1,11 @@
 import {test,expect} from '@playwright/test';
-test('incident, inspectors, playback, and mobile layout', async ({page}) => {
+test('junction decisions, road controls, inspectors, playback, and mobile layout', async ({page}) => {
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
   page.on('console',message=>{if(message.type()==='error' && /hydrat/i.test(message.text())) errors.push(message.text());});
   await page.goto('/');
-  await expect(page.getByRole('heading',{name:'Keep London moving.'})).toBeVisible();
+  await expect(page.getByText('Click a traffic light on the map.')).toBeVisible();
+  await expect(page.locator('.app > header, .page-heading, .bottom-note, .aside-footer, .modal-backdrop, .incident-button')).toHaveCount(0);
+  await expect(page.getByText('SANDBOX', {exact:true})).toHaveCount(0);
   await expect(page.getByRole('button',{name:/Vehicle \d+/,exact:true}).first()).toBeVisible();
   await expect(page.getByRole('img',{name:'AVG TIME ON NETWORK over simulated time',exact:true})).toBeVisible();
   await expect(page.getByTestId('trend-averageVehicleAge')).toHaveAttribute('points',/\S+/);
@@ -16,11 +18,12 @@ test('incident, inspectors, playback, and mobile layout', async ({page}) => {
   await page.getByRole('img',{name:'VEHICLES ON NETWORK over simulated time',exact:true}).hover();
   await expect(page.locator('.trend-tooltip')).toBeVisible();
   await page.getByRole('button',{name:'Pause simulation'}).click();
-  await page.getByRole('button',{name:/Close Oxford Street/}).click();
+  const segment=page.locator('[data-road-id="4-3_4-4"]');
+  await segment.click({position:{x:40,y:10}});
+  await page.getByRole('button',{name:'Close both',exact:true}).click();
   await expect(page.getByRole('heading',{name:'Road inspector'})).toBeVisible();
   await expect(page.getByRole('button',{name:'Close both',exact:true})).toHaveClass(/selected/);
-  await expect(page.getByRole('button',{name:/NETWORK UPDATE/}).first()).toContainText('both directions closed');
-  const segment=page.locator('[data-road-id="4-3_4-4"]');
+  await expect(page.getByRole('heading',{name:'Decision feed'})).toHaveCount(0);
   await expect(segment.locator('[data-blocked-direction]')).toHaveCount(2);
   await page.getByRole('button',{name:'Unblock westbound',exact:true}).click();
   await expect(segment.locator('[data-blocked-direction]')).toHaveCount(1);
@@ -40,7 +43,25 @@ test('incident, inspectors, playback, and mobile layout', async ({page}) => {
   await expect(segment.locator('[data-blocked-direction=reverse]')).toBeVisible();
   await page.getByRole('button',{name:'Toggle roadside traffic bars',exact:true}).click();
   await page.screenshot({path:'/tmp/greenwave-directional-closure.png',fullPage:true});
-  await page.getByRole('button',{name:/VEHICLE #/}).first().click();
+  const signals = page.getByRole('button',{name:/^Traffic light /});
+  // Find a junction with reroutes from the closure, then inspect one of its vehicles.
+  let junctionWithDecisions = '';
+  for (let i = 0; i < await signals.count(); i++) {
+    const signal = signals.nth(i);
+    await signal.focus();
+    await page.keyboard.press('Enter');
+    await expect(signal).toHaveAttribute('aria-pressed','true');
+    if (await page.locator('.decision-item').count()) {
+      junctionWithDecisions = (await signal.getAttribute('aria-label'))!.replace('Traffic light ', '');
+      break;
+    }
+  }
+  expect(junctionWithDecisions).not.toBe('');
+  const decisions = page.getByRole('region',{name:'Traffic light decisions'});
+  for (const item of await decisions.locator('.decision-item small').all()) {
+    await expect(item).toHaveText(`Signal junction ${junctionWithDecisions}`);
+  }
+  await decisions.getByRole('button',{name:/VEHICLE #/}).first().click();
   await expect(page.getByRole('heading',{name:'Vehicle inspector'})).toBeVisible();
   await expect(page.locator('[data-route-layer=original]')).toBeVisible();
   await expect(page.locator('[data-route-layer=version-1]')).toBeVisible();
@@ -53,10 +74,16 @@ test('incident, inspectors, playback, and mobile layout', async ({page}) => {
   await page.getByRole('button',{name:'Follow this journey'}).click();
   await expect(page.getByText(/overhead satnav preview/)).toBeVisible();
   await page.getByRole('button',{name:'Reset',exact:true}).click();
-  await expect(page.getByRole('button',{name:/Close Oxford Street/})).toBeVisible();
+  await expect(page.getByText('Click a traffic light on the map.')).toBeVisible();
+  await page.getByRole('button',{name:'Pause simulation'}).click();
+  await signals.first().focus();
+  await page.keyboard.press('Space');
+  await expect(page.getByText('No recent reroutes at this traffic light.')).toBeVisible();
+  await page.getByRole('button',{name:'Close traffic light inspector'}).click();
+  await expect(page.getByText('Click a traffic light on the map.')).toBeVisible();
   await page.screenshot({path:'/tmp/greenwave-desktop.png',fullPage:true});
   await page.setViewportSize({width:390,height:844});
-  await expect(page.getByRole('heading',{name:'Keep London moving.'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Routing intelligence'})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
   await page.screenshot({path:'/tmp/greenwave-mobile.png',fullPage:true});
   expect(errors).toEqual([]);
