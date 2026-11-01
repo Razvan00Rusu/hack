@@ -20,7 +20,7 @@ The UI test command starts its own local Next.js server. Install Chromium with `
 
 See [the five-hour plan](docs/hackathon-plan.md) for scope, demo script, GPS comparison and simulation limits. See [Decisions API handoff](docs/decisions-api.md) for the verified request format and integration plan.
 
-This is an illustrative map, not real London geometry. Bounded alternating signals and simplified car following support a hackathon demo. Routing and signal timing have independent optional provider selectors for OpenAI and OpenRouter; no measured superiority over commercial navigation is claimed. The 3D driving view and matched A/B experiment remain future work.
+This is an illustrative map, not real London geometry. Bounded alternating signals and simplified car following support a hackathon demo. Routing and signal timing have independent optional provider selectors for OpenAI and OpenRouter; no measured superiority over commercial navigation is claimed. Drive car adds a third-person driving view.
 
 The metric cards include time-series charts sampled every simulated second. Vehicles and congested links are absolute counts; completed journeys and route changes show trailing 10-second counts with cumulative totals below. Orange markers identify closures, demand changes and routing mode changes. Hover a chart for a sampled value.
 
@@ -109,3 +109,9 @@ The runner uses separate resumable per-arm files and exact same-provider respons
 Native requests are audited without credentials. A quota-aware broker limits concurrency, paces OpenAI token usage and permits at most two paced retries for HTTP 429 responses. Early rate-limited arm attempts are quarantined and rerun; their audit/cost overhead is retained. Other service failures produce explicit local fallbacks. The report includes stability diagnostics rather than assuming that high or extra-high traffic reaches equilibrium.
 
 An audit of the preserved initial data found identical raw fixed-signal metrics in 14/18 OpenAI/Jev pairs, identical one-decimal scores in 15/18, and agreement on 410/418 jointly accepted first-checkpoint choices. This is expected under the shared locally costed candidate set and 15% improvement guard, not shared provider wiring. `reports/full-length/routing-audit.json` contains the evidence and a near-threshold example. The new report therefore defaults to comparing complete routing-plus-signal systems while retaining the fixed-signal control.
+
+Drive car takes over the selected active vehicle, or the first active car if none is selected. A third-person chase camera follows the car with smooth movement. Hold W / Up to accelerate, S / Down to reverse, A / D or Left / Right to steer continuously, and Space to brake. Release the accelerator to coast. Click the driving view to focus it; leaving the view releases all inputs. Esc or Network returns the car to automatic driving.
+
+Manual driving uses a world position and heading independent of the road graph. Junctions do not snap the car or require exit selections, and you can leave the road. Road matching updates the route after you enter a different street without moving or steering the car. Traffic and striped road-closure barriers use world-space collisions. Directional closures block the affected lane; both-direction closures use full-width barriers. The driver controls lane discipline and observes the traffic signals.
+
+The compact north-up minimap shows the full network, current route, traffic, destination, position and blocked links. Reroute reasons and collision warnings appear in a small status line. Set closures with the road inspector; barriers and blocked links appear in the driving scene and minimap.

@@ -53,3 +53,5 @@ Separate server routes handle signal timing and route selection through a shared
 ## Simulation assumptions
 
 The map is an illustrative warped grid named after Marylebone roads. It is not OpenStreetMap geometry. All links initially allow two-way traffic. One side blocked means one complete direction blocked, not a lane-capacity reduction. Cars follow with simple spacing and queue at alternating signals with 1-second all-red clearance; conflict-free turn movements, pedestrians and detailed junction physics are out of scope. Demand follows incident road capacities at boundary nodes. Vehicles already on a newly closed link finish that link. New entries cannot use it. Follow mode is overhead, not a 3D first-person camera.
+
+Drive car adds third-person free driving with continuous steering and a live route minimap. Manual movement is independent of the graph; AI route recommendations never reposition the driver.

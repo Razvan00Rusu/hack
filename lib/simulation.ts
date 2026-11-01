@@ -7,7 +7,7 @@ export type Closure = 'open' | 'forward' | 'reverse' | 'closed';
 export type RouteVersion = { nodes: string[]; time: number; reason: string };
 export type Sample = { queued: number; stoppedSeconds: number; averageVehicleAge: number | null; time: number; vehicles: number; completed: number; reroutes: number; congested: number; completedChange: number; reroutesChange: number };
 export type NetworkEvent = { id: number; time: number; label: string };
-export type Car = { approachWait?: number; stopped?: boolean; originalRoute: string[]; travelled: string[]; routeHistory: RouteVersion[]; finished?: boolean; id: number; from: string; to: string; road: string; progress: number; destination: string; route: string[]; origin: string; rerouted: boolean; reason: string; born: number; wait: number };
+export type Car = { approachWait?: number; stopped?: boolean; originalRoute: string[]; travelled: string[]; routeHistory: RouteVersion[]; manual?: boolean; throttle?: number; steering?: number; brake?: boolean; drive?: { x: number; y: number; heading: number; velocity: number; warning: string }; speed?: number; finished?: boolean; id: number; from: string; to: string; road: string; progress: number; destination: string; route: string[]; origin: string; rerouted: boolean; reason: string; born: number; wait: number };
 export type Decision = { id: number; time: number; node: string; car: number; reason: string; road: string; kind: 'closure' | 'congestion' | 'system' };
 export type DecisionSettings = {
   provider: RoutingProvider;
@@ -56,7 +56,7 @@ export function between(a: string, b: string, network:CityMap=defaultMap) {
   let links=graphLinks.get(network);if(!links){links=new Map();for(const r of network.roads){links.set(`${r.a}|${r.b}`,r);links.set(`${r.b}|${r.a}`,r);}graphLinks.set(network,links);}
   return links.get(`${a}|${b}`)!;
 }
-export function position(car: Car,network:CityMap=defaultMap) { const {nodeById}=network; const a = nodeById[car.from], b = nodeById[car.to]; const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy); return { x: a.x + dx * car.progress + dy / len * 4, y: a.y + dy * car.progress - dx / len * 4, angle: Math.atan2(dy, dx) * 180 / Math.PI }; }
+export function position(car: Car,network:CityMap=defaultMap) { if (car.manual && car.drive) return {x:car.drive.x,y:car.drive.y,angle:car.drive.heading*180/Math.PI}; const {nodeById}=network; const a = nodeById[car.from], b = nodeById[car.to]; const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy); return { x: a.x + dx * car.progress + dy / len * 4, y: a.y + dy * car.progress - dx / len * 4, angle: Math.atan2(dy, dx) * 180 / Math.PI }; }
 export class Simulation {
   cars: Car[] = []; finishedCars: Car[] = []; history: Sample[] = []; events: NetworkEvent[] = []; eventId = 0; time = 0; completed = 0; reroutes = 0; tripSeconds = 0; spawned = 0; closures: Record<string, Closure> = {}; adaptive = true; demand = 1; decisions: Decision[] = []; seed = 42; spawnCredit = 0; decisionId = 0;
   network:CityMap;
@@ -177,6 +177,78 @@ export class Simulation {
     c.route = [...path]; c.rerouted = true; this.reroutes++; c.reason = reason;
     c.routeHistory.push({ nodes: [...c.travelled, ...path], time: this.time, reason });
   }
+  takeControl(id: number) {
+    if (this.cars.some(c => c.id === id && c.manual && c.drive)) return;
+    this.releaseControl();
+    const car = this.cars.find(c => c.id === id);
+    if (!car) return;
+    const p = position(car,this.network);
+    car.drive = { x: p.x, y: p.y, heading: p.angle * Math.PI / 180, velocity: 0, warning: '' };
+    car.manual = true; car.throttle = 0; car.steering = 0; car.brake = false; car.speed = 0;
+  }
+  releaseControl() {
+    for (const c of this.cars) { c.manual = false; c.drive = undefined; c.throttle = 0; c.steering = 0; c.brake = false; }
+  }
+  driveCar(c: Car, dt: number) {
+    const {roads,nodeById}=this.network;
+    const d = c.drive!;
+    d.warning = '';
+    const acceleration = c.brake ? -Math.sign(d.velocity) * 35 : (c.throttle || 0) * 15 - Math.sign(d.velocity) * 5;
+    const velocity = Math.max(-10, Math.min(30, d.velocity + acceleration * dt));
+    d.velocity = (!c.throttle || c.brake) && Math.sign(velocity) !== Math.sign(d.velocity) ? 0 : velocity;
+    if (c.brake && Math.abs(d.velocity) < 2) d.velocity = 0;
+    d.heading += (c.steering || 0) * Math.min(1.65, Math.abs(d.velocity) * .12) * dt * (d.velocity < 0 ? -1 : 1);
+    const x = d.x + Math.cos(d.heading) * d.velocity * dt, y = d.y + Math.sin(d.heading) * d.velocity * dt;
+    const candidates = roads.map(road => {
+      const a = nodeById[road.a], b = nodeById[road.b];
+      const t = Math.max(0, Math.min(1, ((x-a.x)*(b.x-a.x)+(y-a.y)*(b.y-a.y))/(road.length*road.length)));
+      return { road, t, distance: Math.hypot(x-a.x-(b.x-a.x)*t,y-a.y-(b.y-a.y)*t) };
+    }).sort((a,b)=>a.distance-b.distance || (a.road.id===c.road?-1:1));
+    const match = candidates[0], road = match.road, a = nodeById[road.a], b = nodeById[road.b];
+    const dot = (Math.cos(d.heading)*(b.x-a.x)+Math.sin(d.heading)*(b.y-a.y)) * (d.velocity < 0 ? -1 : 1);
+    const forward = Math.abs(dot) < road.length * .25 && road.id === c.road ? c.from === road.a : dot >= 0;
+    const from = forward ? road.a : road.b, to = forward ? road.b : road.a;
+    const moved = Math.hypot(x-d.x,y-d.y) > .0001;
+    // Collision uses world geometry. Map matching never changes position or heading.
+    const closed = roads.some(r => {
+      const state = this.closures[r.id]; if (!state || state === 'open') return false;
+      return [r.a,r.b].some(entry => {
+        if (state !== 'closed' && (state === 'forward' ? entry !== r.a : entry !== r.b)) return false;
+        const start = nodeById[entry], end = nodeById[entry===r.a?r.b:r.a];
+        const ux=(end.x-start.x)/r.length, uy=(end.y-start.y)/r.length;
+        const before=(d.x-start.x)*ux+(d.y-start.y)*uy-15, after=(x-start.x)*ux+(y-start.y)*uy-15;
+        const side=-(x-start.x)*uy+(y-start.y)*ux;
+        const intersects = (before*after<=0 || Math.abs(after)<3) && Math.abs(after)<Math.abs(before);
+        return intersects && side >= -11 && side <= (state==='closed'?11:2);
+      });
+    });
+    const occupied = this.cars.some(o => {
+      if (o.id === c.id) return false;
+      const p = position(o,this.network), distance = Math.hypot(p.x-x,p.y-y);
+      return distance < 5 && distance < Math.hypot(p.x-d.x,p.y-d.y);
+    });
+    if (moved && (closed || occupied)) {
+      d.velocity = 0;
+      d.warning = closed ? 'ROAD CLOSED' : 'Traffic ahead';
+      c.speed = 0; return;
+    }
+    d.x = x; d.y = y; c.speed = Math.abs(d.velocity);
+    if (match.distance <= 10 && Math.abs(dot) > road.length * .6 && (road.id !== c.road || from !== c.from)) {
+      const deviated = c.route[0] !== to;
+      if (road.id !== c.road) c.travelled.push(c.to);
+      c.from = from; c.to = to; c.road = road.id;
+      const path = this.findRoute(to, c.destination, this.closures, this.loads(), this.adaptive);
+      const reason = !path.length ? 'No route to destination. Try another street.' : deviated ? `You turned onto ${road.name}. Route recalculated to destination.` : c.reason;
+      this.updateRoute(c, path.length ? path : [to], reason);
+      c.reason = reason;
+    }
+    if (road.id === c.road) c.progress = forward ? match.t : 1-match.t;
+    const destination = nodeById[c.destination];
+    if (Math.hypot(d.x-destination.x,d.y-destination.y)<7) {
+      c.finished = true; c.speed = 0; d.velocity = 0; c.travelled.push(c.destination);
+      this.completed++; this.tripSeconds += this.time-c.born;
+    }
+  }
   spawn() {
     if (this.cars.length >= 450) return;
     // Entry probabilities follow the capacity of this.network.roads touching each this.network.boundary node.
@@ -208,7 +280,12 @@ export class Simulation {
   replan() {
     for (const c of this.cars) {
       const invalid = c.route.some((n, i) => i < c.route.length - 1 && !traversable(this.between(n, c.route[i + 1]), n, this.closures));
-      if (invalid) this.updateRoute(c, this.findRoute(c.to, c.destination, this.closures, {}, false), 'Road closure ahead. Following a locally validated diversion.');
+      if (invalid || (c.manual && c.route.at(-1)!==c.destination)) {
+        const path=this.findRoute(c.to,c.destination,this.closures,{},false);
+        const reason=!path.length?'No route to destination. Try another street.':invalid?'Road closure ahead. Following a locally validated diversion.':'Route available again.';
+        this.updateRoute(c,path.length?path:c.manual?[c.to]:[],reason);
+        if(c.manual)c.reason=reason;
+      }
     }
   }
   private approachKey(c: Car) { return `${c.id}:${c.from}:${c.to}`; }
@@ -281,6 +358,16 @@ export class Simulation {
     for(const car of this.cars){const key=laneKey(car.road,car.from);const lane=lanes.get(key)||[];lane.push(car);lanes.set(key,lane);}
     const ordered = [...this.cars].sort((a, b) => b.progress - a.progress);
     for (const c of ordered) {
+      if (c.manual && c.drive) {
+        const oldKey=laneKey(c.road,c.from);
+        this.driveCar(c, dt);
+        c.stopped = !c.speed;
+        if (c.stopped) {c.wait+=dt;this.stoppedSeconds+=dt;c.approachWait=(c.approachWait||0)+dt;} else c.approachWait=0;
+        const newKey=laneKey(c.road,c.from);
+        if (oldKey!==newKey || c.finished) {const lane=lanes.get(oldKey)!;lane.splice(lane.indexOf(c),1);if(!c.finished){const next=lanes.get(newKey)||[];next.push(c);lanes.set(newKey,next);}}
+        if (c.finished) {exited.add(c.id);this.finishedCars.push(c);this.finishedCars=this.finishedCars.slice(-100);}
+        continue;
+      }
       const road = this.network.roadById[c.road];
       const lane=lanes.get(laneKey(c.road,c.from))!;
       let ahead:Car|undefined;for(const o of lane)if(o.id!==c.id&&o.progress>c.progress&&(!ahead||o.progress<ahead.progress))ahead=o;
